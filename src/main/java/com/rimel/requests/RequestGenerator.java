@@ -14,18 +14,21 @@ import java.util.List;
 
 public class RequestGenerator {
 
+    private static final String TOKEN = "token 4eedafe420633d68e9bed08b213b58586cab64c6";
+
     /**
      * Getting all isssues for a given repository
      * @param url Format: /:owner/:repo
      */
-    public List<HttpResponse<JsonNode>> requestIsssues(String url) {
+    public List<HttpResponse<JsonNode>> requestIssues(String url) {
         List<HttpResponse<JsonNode>> list = new ArrayList<HttpResponse<JsonNode>>();
         try {
             HttpResponse<JsonNode> response =
-                    Unirest.get("https://api.github.com/repos"+ url +"/issues")
-                            .queryString("labels","bug")
-                            .queryString("state","closed")
-                            .asJson();
+                Unirest.get("https://api.github.com/repos"+ url +"/issues")
+                    .header("Authorization", TOKEN)
+                    .queryString("labels","bug")
+                    .queryString("state","closed")
+                    .asJson();
             String link = response.getHeaders().get("Link").toString();
             Integer i1 = link.lastIndexOf("page=");
             Integer i2 = link.lastIndexOf(">");
@@ -34,10 +37,12 @@ public class RequestGenerator {
 
             for (int i = 2; i < lastPage; i++) {
                 HttpResponse<JsonNode> res =
-                        Unirest.get("https://api.github.com/repos"+ url +"/issues")
-                                .queryString("labels","bug")
-                                .queryString("state","closed")
-                                .asJson();
+                    Unirest.get("https://api.github.com/repos"+ url +"/issues")
+                        .header("Authorization", TOKEN)
+                        .queryString("labels","bug")
+                        .queryString("state","closed")
+                        .queryString("page", i)
+                        .asJson();
                 list.add(res);
             }
         } catch(Exception e) {
@@ -55,6 +60,7 @@ public class RequestGenerator {
     public HttpResponse<JsonNode> requestEvents(String url){
         try {
             return Unirest.get(url)
+                    .header("Authorization", TOKEN)
                     .asJson();
         }catch(Exception e){
             System.err.println(e);
